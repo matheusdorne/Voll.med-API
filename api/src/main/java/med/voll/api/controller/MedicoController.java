@@ -27,13 +27,11 @@ public class MedicoController {
 
         var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(medico.getId()).toUri();
         //Encapsulamento de link da api
-        
         return ResponseEntity.created(uri).body(new DadosDetalhamentoMedico(medico));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity detalhar(@PathVariable Long id) {
-
         var medico = repository.getReferenceById(id);
         return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
     }
@@ -63,9 +61,7 @@ public class MedicoController {
        medico.excluir();
 
        return ResponseEntity.noContent().build();
-
        //Reponse entitiy é uma classe para controlar respostas de retorno
-
     }
 
 }
