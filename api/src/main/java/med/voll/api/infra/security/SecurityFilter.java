@@ -15,6 +15,18 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        System.out.println("FILTRO CHAMADO");
+        var tokenJWT = recuperarToken(request);
+
+
+
+        filterChain.doFilter(request, response); // Chama o próximo filtro
+    }
+
+    private String recuperarToken(HttpServletRequest request) {
+        var authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader == null){
+            throw new RuntimeException("Token KWT não enviado!");
+        }
+        return authorizationHeader.replace("Bearer","");
     }
 }
