@@ -27,7 +27,7 @@ public class AgendaDeConsultas {
     private List<ValidadorAgendamentoDeConsulta> validadores;
     // Spring localiza todas as classes que implementam essa interface e injeta nesse atributo
 
-    public void agendar(DadosAgendamentoConsulta dados) {
+    public DadosDetalhamentoConsulta agendar(DadosAgendamentoConsulta dados) {
 
         if (!pacienteRepository.existsById(dados.idPaciente())) {
             throw new ValidacaoException("Id do paciente informado não existe!");
@@ -40,8 +40,14 @@ public class AgendaDeConsultas {
 
         var paciente = pacienteRepository.findById(dados.idPaciente()).get(); //.get() é utilizado para acessar o Optional que é retornado pelo findById
         var medico = escolherMedico(dados);
+        
+        if (medico == null) {
+            throw new ValidacaoException("Não existe médico disponivel na data!");
+        }
         var consulta = new Consulta(null, medico, paciente, dados.data());
         consultaRepository.save(consulta);
+
+        return new DadosDetalhamentoConsulta(consulta);
     }
 
     private Medico escolherMedico(DadosAgendamentoConsulta dados) {
