@@ -1,10 +1,10 @@
 package med.voll.api.domain.consulta;
 
 import med.voll.api.domain.ValidacaoException;
-import med.voll.api.domain.consulta.validacoes.ValidadorAgendamentoDeConsulta;
+import med.voll.api.domain.consulta.validacoes.agendamento.ValidadorAgendamentoDeConsulta;
+import med.voll.api.domain.consulta.validacoes.cancelamento.ValidadorCancelamentoDeConsulta;
 import med.voll.api.domain.medico.Medico;
 import med.voll.api.domain.medico.MedicoRepository;
-import med.voll.api.domain.paciente.Paciente;
 import med.voll.api.domain.paciente.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +27,9 @@ public class AgendaDeConsultas {
     private List<ValidadorAgendamentoDeConsulta> validadores;
     // Spring localiza todas as classes que implementam essa interface e injeta nesse atributo
 
+    @Autowired
+    private List<ValidadorCancelamentoDeConsulta> validadoresCandelamento;
+
     public DadosDetalhamentoConsulta agendar(DadosAgendamentoConsulta dados) {
 
         if (!pacienteRepository.existsById(dados.idPaciente())) {
@@ -40,11 +43,11 @@ public class AgendaDeConsultas {
 
         var paciente = pacienteRepository.findById(dados.idPaciente()).get(); //.get() é utilizado para acessar o Optional que é retornado pelo findById
         var medico = escolherMedico(dados);
-        
+
         if (medico == null) {
             throw new ValidacaoException("Não existe médico disponivel na data!");
         }
-        var consulta = new Consulta(null, medico, paciente, dados.data());
+        var consulta = new Consulta(null, medico, paciente, dados.data(), null);
         consultaRepository.save(consulta);
 
         return new DadosDetalhamentoConsulta(consulta);
@@ -60,6 +63,21 @@ public class AgendaDeConsultas {
         }
 
         return medicoRepository.escolherMedicoAleatorioLivreNaData(dados.especialidade(), dados.data());
+
+    }
+
+    public void cancelar(DadosCancelamentoConsulta dados) {
+
+        if (!consultaRepository.existsById(dados.id())) {
+        throw new ValidacaoException("Id de consulta inexisstente!");
+        }
+
+        validadoresCandelamento.forEach(v -> v.validar(dados));
+
+
+        var consulta = consultaRepository.getReferenceById(dados.id());
+        consulta.cancelar(dados.motivo());
+
 
     }
 }
